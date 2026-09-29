@@ -1,25 +1,40 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
+  const getLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+
+    if (status !== "granted") {
+      console.log("Location permission denied");
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+
+    console.log(location.coords);
+  };
 
   return (
     <View style={s.container}>
       <Text style={s.title}>LunchBorås</Text>
-
       <Text style={s.subtitle}>Hitta restauranger för dagens lunch</Text>
-
       <Pressable style={s.button} onPress={() => router.push("/restaurant/1")}>
         <Text style={s.buttonText}>Visa restauranger</Text>
       </Pressable>
-
       <Pressable
         style={s.favoriteButton}
         onPress={() => router.push("/favorites")}
       >
         <Text style={s.buttonText}>Mina favoriter</Text>
       </Pressable>
+      {/*
+<Pressable style={s.button} onPress={getLocation}>
+  <Text style={s.buttonText}>Hitta min plats</Text>
+</Pressable>
+*/}
     </View>
   );
 }
