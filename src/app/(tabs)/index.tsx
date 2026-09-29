@@ -5,29 +5,26 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>LunchBorås</Text>
+    <View style={s.container}>
+      <Text style={s.title}>LunchBorås</Text>
 
-      <Text style={styles.subtitle}>Hitta restauranger för dagens lunch</Text>
+      <Text style={s.subtitle}>Hitta restauranger för dagens lunch</Text>
 
-      <Pressable
-        style={styles.button}
-        onPress={() => router.push("/restaurant/1")}
-      >
-        <Text style={styles.buttonText}>Visa restauranger</Text>
+      <Pressable style={s.button} onPress={() => router.push("/restaurant/1")}>
+        <Text style={s.buttonText}>Visa restauranger</Text>
       </Pressable>
 
       <Pressable
-        style={styles.favoriteButton}
+        style={s.favoriteButton}
         onPress={() => router.push("/favorites")}
       >
-        <Text style={styles.buttonText}>Mina favoriter</Text>
+        <Text style={s.buttonText}>Mina favoriter</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
