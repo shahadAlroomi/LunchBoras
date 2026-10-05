@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const favorites = [
   {
@@ -14,6 +15,17 @@ const favorites = [
 ];
 
 export default function Favorites() {
+  const addFavorite = () => {
+    console.log("BUTTON PRESSED");
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      .then(() => {
+        console.log("HAPTICS DONE");
+      })
+      .catch((error) => {
+        console.log("HAPTICS ERROR", error);
+      });
+  };
   return (
     <View style={s.container}>
       <Text style={s.title}>Mina favoriter</Text>
@@ -22,6 +34,10 @@ export default function Favorites() {
         <View key={restaurant.id} style={s.card}>
           <Text style={s.name}>{restaurant.name}</Text>
           <Text style={s.address}>{restaurant.address}</Text>
+
+          <Pressable onPress={addFavorite}>
+            <Text>❤️ Lägg till favorit</Text>
+          </Pressable>
         </View>
       ))}
     </View>
