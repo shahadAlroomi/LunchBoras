@@ -12,40 +12,23 @@ import {
   View,
 } from "react-native";
 
-const restaurants = [
-  {
-    id: 1,
-    name: "Restaurant 1",
-    category: "Pizza",
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-    rating: "4.5",
-    price: "119 kr",
-    distance: "1.2 km",
-  },
-  {
-    id: 2,
-    name: "Restaurant 2",
-    category: "Burger",
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5",
-    rating: "4.3",
-    price: "129 kr",
-    distance: "2.1 km",
-  },
-  {
-    id: 3,
-    name: "Restaurant 3",
-    category: "Sallad",
-    image: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f",
-    rating: "4.7",
-    price: "139 kr",
-    distance: "2.8 km",
-  },
-];
+type Restaurant = {
+  id: number;
+  name: string;
+  category: string;
+  image: string;
+  rating: string;
+  price: string;
+  distance: string;
+  openingHours: string;
+};
 
 export default function Index() {
   const router = useRouter();
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Alla");
+  const [apiRestaurants, setApiRestaurants] = useState<Restaurant[]>([]);
 
   const query = `
 [out:json];
@@ -53,20 +36,53 @@ node["amenity"="restaurant"](57.65,12.85,57.75,13.05);
 out;
 `;
 
-  const API_URL = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  const API_URL = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
+    query,
+  )}`;
 
   useEffect(() => {
     const getRestaurants = async () => {
       const response = await fetch(API_URL);
       const data = await response.json();
 
-      console.log(data);
+      const restaurants: Restaurant[] = data.elements
+        .filter((restaurant: any) => restaurant.tags?.name)
+        .map((restaurant: any) => {
+          const cuisine = restaurant.tags?.cuisine?.toLowerCase() || "";
+
+          let category = "Alla";
+
+          if (cuisine.includes("pizza")) {
+            category = "Pizza";
+          } else if (cuisine.includes("burger")) {
+            category = "Burger";
+          } else if (
+            cuisine.includes("salad") ||
+            cuisine.includes("vegetarian")
+          ) {
+            category = "Sallad";
+          }
+
+          return {
+            id: restaurant.id,
+            name: restaurant.tags.name,
+            category,
+            image:
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+            rating: "—",
+            price: "—",
+            distance: "—",
+            openingHours: restaurant.tags?.opening_hours || "Ej angivet",
+          };
+        });
+
+      setApiRestaurants(restaurants);
     };
 
     getRestaurants();
   }, []);
 
-  const filteredRestaurants = restaurants.filter(
+  const filteredRestaurants = apiRestaurants.filter(
     (restaurant) =>
       restaurant.name.toLowerCase().includes(search.toLowerCase()) &&
       (selectedCategory === "Alla" || restaurant.category === selectedCategory),
@@ -92,6 +108,7 @@ out;
         </Pressable>
       </View>
 
+      {/* Search */}
       <View style={s.searchContainer}>
         <Text style={s.searchIcon}>⌕</Text>
 
@@ -174,7 +191,6 @@ out;
         </Pressable>
       </ScrollView>
 
-      {/* Popular restaurants */}
       <View style={s.sectionHeader}>
         <Text style={s.sectionTitle}>Populära restauranger</Text>
 
@@ -212,6 +228,7 @@ out;
               </View>
 
               <Text style={s.price}>Dagens lunch från {item.price}</Text>
+              <Text style={s.price}>🕐 {item.openingHours}</Text>
             </View>
           </Pressable>
         )}
@@ -238,6 +255,7 @@ out;
         </Pressable>
       </View>
 
+      {/* Favorites */}
       <Pressable
         style={s.favoritesButton}
         onPress={() => router.push("/favorites")}
@@ -456,6 +474,10 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
 
+  lunchInfo: {
+    flex: 1,
+  },
+
   lunchTitle: {
     fontSize: 17,
     fontWeight: "bold",
@@ -490,8 +512,5 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#222222",
-  },
-  lunchInfo: {
-    flex: 1,
   },
 });
