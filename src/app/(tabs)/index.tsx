@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
-import { Dimensions } from "react-native";
+import { useState } from "react";
 import {
+  Dimensions,
   FlatList,
   Image,
   Pressable,
@@ -40,6 +41,11 @@ const restaurants = [
 
 export default function Index() {
   const router = useRouter();
+  const [search, setSearch] = useState("");
+
+  const filteredRestaurants = restaurants.filter((restaurant) =>
+    restaurant.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <ScrollView
@@ -68,6 +74,8 @@ export default function Index() {
           style={s.search}
           placeholder="Sök restaurang..."
           placeholderTextColor="#888888"
+          value={search}
+          onChangeText={setSearch}
         />
 
         <Pressable style={s.filterButton}>
@@ -107,7 +115,7 @@ export default function Index() {
       </View>
 
       <FlatList
-        data={restaurants}
+        data={filteredRestaurants}
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id.toString()}
