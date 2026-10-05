@@ -142,10 +142,14 @@ export default function Index() {
       <Text style={s.sectionTitle}>Dagens lunch</Text>
 
       <View style={s.lunchCard}>
-        <View>
-          <Text style={s.lunchTitle}>Lunch idag 🍽️</Text>
+        <View style={s.lunchInfo}>
+          <Text style={s.lunchTitle}>Lunch idag</Text>
 
-          <Text style={s.lunchText}>Se dagens lunch och öppettider</Text>
+          <Text style={s.lunchText}>Dagens lunch från 119 kr</Text>
+
+          <Text style={s.lunchText}>🕐 11:00 – 14:00</Text>
+
+          <Text style={s.lunchText}>📍 Borås</Text>
         </View>
 
         <Pressable
@@ -156,7 +160,6 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* Favorites */}
       <Pressable
         style={s.favoritesButton}
         onPress={() => router.push("/favorites")}
@@ -407,5 +410,8 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#222222",
+  },
+  lunchInfo: {
+    flex: 1,
   },
 });
