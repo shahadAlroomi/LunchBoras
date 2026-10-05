@@ -1,9 +1,25 @@
 import * as ImagePicker from "expo-image-picker";
+import * as Notifications from "expo-notifications";
 import { useState } from "react";
-import { Image, Pressable, Text, View, StyleSheet } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Profile() {
   const [image, setImage] = useState<string | null>(null);
+
+  const scheduleLunchReminder = async () => {
+    await Notifications.requestPermissionsAsync();
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "LunchBorås 🍽️",
+        body: "Dags att kolla dagens lunch!",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+      },
+    });
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -24,6 +40,9 @@ export default function Profile() {
 
       <Pressable style={s.button} onPress={pickImage}>
         <Text style={s.buttonText}>Välj profilbild</Text>
+      </Pressable>
+      <Pressable onPress={scheduleLunchReminder}>
+        <Text>🔔 Påminn mig om lunch</Text>
       </Pressable>
     </View>
   );
