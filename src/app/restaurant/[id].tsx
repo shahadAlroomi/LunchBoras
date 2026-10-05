@@ -1,8 +1,31 @@
+import * as Location from "expo-location";
 import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function RestaurantDetails() {
   const { id } = useLocalSearchParams();
+
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const getLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        console.log("Location permission denied");
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({});
+
+      setLocation(currentLocation);
+    };
+
+    getLocation();
+  }, []);
 
   return (
     <ScrollView>
@@ -40,6 +63,14 @@ export default function RestaurantDetails() {
           <Text style={s.label}>⭐ Betyg</Text>
           <Text style={s.text}>4.5 / 5</Text>
         </View>
+
+        {location && (
+          <View style={s.info}>
+            <Text style={s.label}>📍 Din position</Text>
+            <Text style={s.text}>Latitude: {location.coords.latitude}</Text>
+            <Text style={s.text}>Longitude: {location.coords.longitude}</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
