@@ -10,6 +10,32 @@ export default function RestaurantDetails() {
     null,
   );
 
+  const restaurantLocation = {
+    latitude: 57.721,
+    longitude: 12.94,
+  };
+
+  const calculateDistance = () => {
+    if (!location) return null;
+
+    const lat1 = (location.coords.latitude * Math.PI) / 180;
+    const lon1 = (location.coords.longitude * Math.PI) / 180;
+
+    const lat2 = (restaurantLocation.latitude * Math.PI) / 180;
+    const lon2 = (restaurantLocation.longitude * Math.PI) / 180;
+
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return 6371 * c;
+  };
+
   useEffect(() => {
     const getLocation = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -66,9 +92,10 @@ export default function RestaurantDetails() {
 
         {location && (
           <View style={s.info}>
-            <Text style={s.label}>📍 Din position</Text>
-            <Text style={s.text}>Latitude: {location.coords.latitude}</Text>
-            <Text style={s.text}>Longitude: {location.coords.longitude}</Text>
+            <Text style={s.label}>📍 Avstånd</Text>
+            <Text style={s.text}>
+              {calculateDistance()?.toFixed(1)} km från dig
+            </Text>
           </View>
         )}
       </View>
