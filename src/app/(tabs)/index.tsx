@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import {
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -45,7 +46,6 @@ export default function Index() {
       contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={s.header}>
         <View>
           <Text style={s.logo}>LunchBorås</Text>
@@ -60,7 +60,6 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* Search */}
       <View style={s.searchContainer}>
         <Text style={s.searchIcon}>⌕</Text>
 
@@ -75,7 +74,6 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* Categories */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -107,23 +105,19 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* Restaurant cards */}
-      <ScrollView
+      <FlatList
+        data={restaurants}
         horizontal
         showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={s.restaurantList}
-      >
-        {restaurants.map((restaurant) => (
+        renderItem={({ item }) => (
           <Pressable
-            key={restaurant.id}
             style={s.card}
-            onPress={() => router.push(`/restaurant/${restaurant.id}`)}
+            onPress={() => router.push(`/restaurant/${item.id}`)}
           >
             <View>
-              <Image
-                source={{ uri: restaurant.image }}
-                style={s.restaurantImage}
-              />
+              <Image source={{ uri: item.image }} style={s.restaurantImage} />
 
               <Pressable style={s.favoriteButton}>
                 <Text style={s.heart}>♡</Text>
@@ -131,21 +125,20 @@ export default function Index() {
             </View>
 
             <View style={s.cardContent}>
-              <Text style={s.restaurantName}>{restaurant.name}</Text>
+              <Text style={s.restaurantName}>{item.name}</Text>
 
               <View style={s.ratingRow}>
-                <Text style={s.rating}>★ {restaurant.rating}</Text>
+                <Text style={s.rating}>★ {item.rating}</Text>
 
-                <Text style={s.distance}>{restaurant.distance}</Text>
+                <Text style={s.distance}>{item.distance}</Text>
               </View>
 
-              <Text style={s.price}>Dagens lunch från {restaurant.price}</Text>
+              <Text style={s.price}>Dagens lunch från {item.price}</Text>
             </View>
           </Pressable>
-        ))}
-      </ScrollView>
+        )}
+      />
 
-      {/* Today's lunch */}
       <Text style={s.sectionTitle}>Dagens lunch</Text>
 
       <View style={s.lunchCard}>
