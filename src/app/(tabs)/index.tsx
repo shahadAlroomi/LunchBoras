@@ -1,40 +1,27 @@
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
-  const getLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-
-    if (status !== "granted") {
-      console.log("Location permission denied");
-      return;
-    }
-
-    const location = await Location.getCurrentPositionAsync({});
-
-    console.log(location.coords);
-  };
 
   return (
     <View style={s.container}>
-      <Text style={s.title}>LunchBorås</Text>
-      <Text style={s.subtitle}>Hitta restauranger för dagens lunch</Text>
+      <View style={s.header}>
+        <Text style={s.logo}>🍽️ LunchBorås</Text>
+
+        <Text style={s.subtitle}>Hitta dagens lunch i Borås</Text>
+      </View>
+
       <Pressable style={s.button} onPress={() => router.push("/restaurant/1")}>
         <Text style={s.buttonText}>Visa restauranger</Text>
       </Pressable>
+
       <Pressable
         style={s.favoriteButton}
         onPress={() => router.push("/favorites")}
       >
-        <Text style={s.buttonText}>Mina favoriter</Text>
+        <Text style={s.buttonText}>❤️ Mina favoriter</Text>
       </Pressable>
-      {/*
-<Pressable style={s.button} onPress={getLocation}>
-  <Text style={s.buttonText}>Hitta min plats</Text>
-</Pressable>
-*/}
     </View>
   );
 }
@@ -42,34 +29,47 @@ export default function Index() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
     padding: 20,
+    backgroundColor: "#FFFFFF",
   },
-  title: {
+
+  header: {
+    alignItems: "center",
+    marginTop: 50,
+    marginBottom: 40,
+  },
+
+  logo: {
     fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 8,
+    color: "#71883F",
   },
+
   subtitle: {
     fontSize: 16,
-    marginBottom: 30,
     textAlign: "center",
+    color: "#555555",
   },
+
   button: {
-    padding: 15,
+    backgroundColor: "#C7D99A",
+    padding: 16,
+    borderRadius: 20,
     marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor: "#208AEF",
+    alignItems: "center",
   },
+
   favoriteButton: {
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: "#555",
+    backgroundColor: "#E3ECC8",
+    padding: 16,
+    borderRadius: 20,
+    alignItems: "center",
   },
+
   buttonText: {
-    color: "white",
     fontSize: 16,
     fontWeight: "600",
+    color: "#3F4D27",
   },
 });
