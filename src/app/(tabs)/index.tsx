@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
-import { Dimensions } from "react-native";
+import { useState } from "react";
 import {
+  Dimensions,
   FlatList,
   Image,
   Pressable,
@@ -15,6 +16,7 @@ const restaurants = [
   {
     id: 1,
     name: "Restaurant 1",
+    category: "Pizza",
     image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
     rating: "4.5",
     price: "119 kr",
@@ -23,6 +25,7 @@ const restaurants = [
   {
     id: 2,
     name: "Restaurant 2",
+    category: "Burger",
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5",
     rating: "4.3",
     price: "129 kr",
@@ -31,6 +34,7 @@ const restaurants = [
   {
     id: 3,
     name: "Restaurant 3",
+    category: "Sallad",
     image: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f",
     rating: "4.7",
     price: "139 kr",
@@ -40,6 +44,14 @@ const restaurants = [
 
 export default function Index() {
   const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Alla");
+
+  const filteredRestaurants = restaurants.filter(
+    (restaurant) =>
+      restaurant.name.toLowerCase().includes(search.toLowerCase()) &&
+      (selectedCategory === "Alla" || restaurant.category === selectedCategory),
+  );
 
   return (
     <ScrollView
@@ -68,6 +80,8 @@ export default function Index() {
           style={s.search}
           placeholder="Sök restaurang..."
           placeholderTextColor="#888888"
+          value={search}
+          onChangeText={setSearch}
         />
 
         <Pressable style={s.filterButton}>
@@ -80,20 +94,64 @@ export default function Index() {
         showsHorizontalScrollIndicator={false}
         style={s.categories}
       >
-        <Pressable style={s.categoryActive}>
-          <Text style={s.categoryActiveText}>🍽️ Alla</Text>
+        <Pressable
+          style={selectedCategory === "Alla" ? s.categoryActive : s.category}
+          onPress={() => setSelectedCategory("Alla")}
+        >
+          <Text
+            style={
+              selectedCategory === "Alla"
+                ? s.categoryActiveText
+                : s.categoryText
+            }
+          >
+            🍽️ Alla
+          </Text>
         </Pressable>
 
-        <Pressable style={s.category}>
-          <Text style={s.categoryText}>🍕 Pizza</Text>
+        <Pressable
+          style={selectedCategory === "Pizza" ? s.categoryActive : s.category}
+          onPress={() => setSelectedCategory("Pizza")}
+        >
+          <Text
+            style={
+              selectedCategory === "Pizza"
+                ? s.categoryActiveText
+                : s.categoryText
+            }
+          >
+            🍕 Pizza
+          </Text>
         </Pressable>
 
-        <Pressable style={s.category}>
-          <Text style={s.categoryText}>🍔 Burger</Text>
+        <Pressable
+          style={selectedCategory === "Burger" ? s.categoryActive : s.category}
+          onPress={() => setSelectedCategory("Burger")}
+        >
+          <Text
+            style={
+              selectedCategory === "Burger"
+                ? s.categoryActiveText
+                : s.categoryText
+            }
+          >
+            🍔 Burger
+          </Text>
         </Pressable>
 
-        <Pressable style={s.category}>
-          <Text style={s.categoryText}>🥗 Sallad</Text>
+        <Pressable
+          style={selectedCategory === "Sallad" ? s.categoryActive : s.category}
+          onPress={() => setSelectedCategory("Sallad")}
+        >
+          <Text
+            style={
+              selectedCategory === "Sallad"
+                ? s.categoryActiveText
+                : s.categoryText
+            }
+          >
+            🥗 Sallad
+          </Text>
         </Pressable>
       </ScrollView>
 
@@ -107,7 +165,7 @@ export default function Index() {
       </View>
 
       <FlatList
-        data={restaurants}
+        data={filteredRestaurants}
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id.toString()}
