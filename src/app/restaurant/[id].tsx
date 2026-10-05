@@ -1,15 +1,29 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function RestaurantDetails() {
   const { id } = useLocalSearchParams();
+  const addFavorite = async () => {
+    setIsFavorite(!isFavorite);
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
 
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
-
+  const [isFavorite, setIsFavorite] = useState(false);
   const restaurantLocation = {
     latitude: 57.721,
     longitude: 12.94,
@@ -55,12 +69,22 @@ export default function RestaurantDetails() {
 
   return (
     <ScrollView>
-      <Image
-        source={{
-          uri: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-        }}
-        style={s.image}
-      />
+      <View style={s.imageContainer}>
+        <Image
+          source={{
+            uri: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+          }}
+          style={s.image}
+        />
+
+        <Pressable style={s.favoriteButton} onPress={addFavorite}>
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={26}
+            color={isFavorite ? "#FFB82E" : "black"}
+          />
+        </Pressable>
+      </View>
 
       <View style={s.container}>
         <Text style={s.title}>Restaurant {id}</Text>
@@ -107,6 +131,26 @@ const s = StyleSheet.create({
   image: {
     width: "100%",
     height: 220,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+
+  favoriteButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  favoriteText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 
   container: {
