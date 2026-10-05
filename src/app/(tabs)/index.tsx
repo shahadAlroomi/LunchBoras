@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -46,6 +46,25 @@ export default function Index() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Alla");
+
+  const query = `
+[out:json];
+node["amenity"="restaurant"](57.65,12.85,57.75,13.05);
+out;
+`;
+
+  const API_URL = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+  useEffect(() => {
+    const getRestaurants = async () => {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+
+      console.log(data);
+    };
+
+    getRestaurants();
+  }, []);
 
   const filteredRestaurants = restaurants.filter(
     (restaurant) =>
