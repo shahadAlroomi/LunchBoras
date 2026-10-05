@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { Dimensions } from "react-native";
 import {
   FlatList,
   Image,
@@ -170,6 +171,8 @@ export default function Index() {
   );
 }
 
+const screenWidth = Dimensions.get("window").width;
+
 const s = StyleSheet.create({
   container: {
     flex: 1,
@@ -302,7 +305,7 @@ const s = StyleSheet.create({
   },
 
   card: {
-    width: 220,
+    width: screenWidth * 0.72,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     marginRight: 15,
