@@ -1,30 +1,15 @@
 import * as ImagePicker from "expo-image-picker";
-import * as Notifications from "expo-notifications";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Profile() {
   const [image, setImage] = useState<string | null>(null);
 
-  const scheduleLunchReminder = async () => {
-    await Notifications.requestPermissionsAsync();
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "LunchBorås 🍽️",
-        body: "Dags att kolla dagens lunch!",
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 5,
-      },
-    });
-  };
-
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
+      aspect: [1, 1],
       quality: 1,
     });
 
@@ -32,17 +17,21 @@ export default function Profile() {
       setImage(result.assets[0].uri);
     }
   };
+
   return (
     <View style={s.container}>
       <Text style={s.title}>Min sida</Text>
 
-      {image && <Image source={{ uri: image }} style={s.profileImage} />}
+      {image ? (
+        <Image source={{ uri: image }} style={s.profileImage} />
+      ) : (
+        <View style={s.placeholder}>
+          <Text style={s.placeholderText}>Ingen bild</Text>
+        </View>
+      )}
 
       <Pressable style={s.button} onPress={pickImage}>
         <Text style={s.buttonText}>Välj profilbild</Text>
-      </Pressable>
-      <Pressable onPress={scheduleLunchReminder}>
-        <Text>🔔 Påminn mig om lunch</Text>
       </Pressable>
     </View>
   );
@@ -53,6 +42,7 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 20,
+    paddingTop: 50,
   },
   title: {
     fontSize: 28,
@@ -60,18 +50,31 @@ const s = StyleSheet.create({
     marginBottom: 30,
   },
   profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    marginBottom: 20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    marginBottom: 25,
+  },
+  placeholder: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: "#EEEEEE",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 25,
+  },
+  placeholderText: {
+    color: "#777777",
   },
   button: {
-    backgroundColor: "#208AEF",
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: "#FFB82E",
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 25,
   },
   buttonText: {
-    color: "white",
     fontSize: 16,
+    fontWeight: "600",
   },
 });
