@@ -1,51 +1,84 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-const restaurants = [
-  {
-    id: 1,
-    name: "Restaurant 1",
-    category: "Pizza",
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-    rating: "4.5",
-    price: "119 kr",
-    distance: "1.2 km",
-  },
-  {
-    id: 2,
-    name: "Restaurant 2",
-    category: "Burger",
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5",
-    rating: "4.3",
-    price: "129 kr",
-    distance: "2.1 km",
-  },
-  {
-    id: 3,
-    name: "Restaurant 3",
-    category: "Sallad",
-    image: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f",
-    rating: "4.7",
-    price: "139 kr",
-    distance: "2.8 km",
-  },
-];
+import CategoryFilter from "../../components/CategoryFilter";
+import FavoritesButton from "../../components/FavoritesButton";
+import Header from "../../components/Header";
+import LunchCard from "../../components/LunchCard";
+import type { Restaurant } from "../../components/RestaurantCard";
+import RestaurantCard from "../../components/RestaurantCard";
+import SearchBar from "../../components/SearchBar";
+import type { Lunch } from "../../services/lunchApi";
+import { getLunches } from "../../services/lunchApi";
+import { getRestaurants } from "../../services/restaurantApi";
 
-export default function Index() {
+function getWeekNumber(date: Date): number {
+  const tempDate = new Date(date.getTime());
+
+  tempDate.setHours(0, 0, 0, 0);
+
+  tempDate.setDate(tempDate.getDate() + 3 - ((tempDate.getDay() + 6) % 7));
+
+  const week1 = new Date(tempDate.getFullYear(), 0, 4);
+
+  return (
+    1 +
+    Math.round(
+      ((tempDate.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
+
+export default function HomeScreen() {
   const router = useRouter();
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Alla");
+
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [lunches, setLunches] = useState<Lunch[]>([]);
+  const [lunchLoading, setLunchLoading] = useState(true);
+
+  const weekNumber = getWeekNumber(new Date());
+
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        const data = await getRestaurants();
+        setRestaurants(data);
+      } catch (error) {
+        console.log(error);
+        setError("Kunde inte hämta restauranger.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRestaurants();
+  }, []);
+
+  useEffect(() => {
+    const loadLunches = async () => {
+      try {
+        const data = await getLunches();
+        setLunches(data);
+      } catch (error) {
+        console.log("Lunch error:", error);
+      } finally {
+        setLunchLoading(false);
+      }
+    };
+
+    loadLunches();
+  }, []);
 
   const filteredRestaurants = restaurants.filter(
     (restaurant) =>
@@ -55,424 +88,115 @@ export default function Index() {
 
   return (
     <ScrollView
-      style={s.container}
-      contentContainerStyle={s.content}
+      contentContainerStyle={s.container}
       showsVerticalScrollIndicator={false}
     >
-      <View style={s.header}>
-        <View>
-          <Text style={s.logo}>LunchBorås</Text>
-          <Text style={s.subtitle}>Hitta dagens lunch</Text>
-        </View>
+      <Header onProfilePress={() => router.push("/(tabs)/profile")} />
 
-        <Pressable
-          style={s.profileButton}
-          onPress={() => router.push("/profile")}
-        >
-          <Text style={s.profileIcon}>👤</Text>
-        </Pressable>
-      </View>
+      <SearchBar search={search} setSearch={setSearch} />
 
-      <View style={s.searchContainer}>
-        <Text style={s.searchIcon}>⌕</Text>
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
 
-        <TextInput
-          style={s.search}
-          placeholder="Sök restaurang..."
-          placeholderTextColor="#888888"
-          value={search}
-          onChangeText={setSearch}
-        />
-
-        <Pressable style={s.filterButton}>
-          <Text style={s.filterIcon}>☷</Text>
-        </Pressable>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={s.categories}
-      >
-        <Pressable
-          style={selectedCategory === "Alla" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Alla")}
-        >
-          <Text
-            style={
-              selectedCategory === "Alla"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍽️ Alla
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Pizza" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Pizza")}
-        >
-          <Text
-            style={
-              selectedCategory === "Pizza"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍕 Pizza
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Burger" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Burger")}
-        >
-          <Text
-            style={
-              selectedCategory === "Burger"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍔 Burger
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Sallad" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Sallad")}
-        >
-          <Text
-            style={
-              selectedCategory === "Sallad"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🥗 Sallad
-          </Text>
-        </Pressable>
-      </ScrollView>
-
-      {/* Popular restaurants */}
       <View style={s.sectionHeader}>
         <Text style={s.sectionTitle}>Populära restauranger</Text>
 
-        <Pressable>
-          <Text style={s.seeAll}>Se alla</Text>
+        <Pressable onPress={() => setSelectedCategory("Alla")}>
+          <Text style={s.seAlla}>Se alla</Text>
         </Pressable>
       </View>
 
-      <FlatList
-        data={filteredRestaurants}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={s.restaurantList}
-        renderItem={({ item }) => (
-          <Pressable
-            style={s.card}
-            onPress={() => router.push(`/restaurant/${item.id}`)}
-          >
-            <View>
-              <Image source={{ uri: item.image }} style={s.restaurantImage} />
+      {loading && <Text style={s.message}>Hämtar restauranger...</Text>}
 
-              <Pressable style={s.favoriteButton}>
-                <Text style={s.heart}>♡</Text>
-              </Pressable>
-            </View>
+      {error !== "" && <Text style={s.error}>{error}</Text>}
 
-            <View style={s.cardContent}>
-              <Text style={s.restaurantName}>{item.name}</Text>
-
-              <View style={s.ratingRow}>
-                <Text style={s.rating}>★ {item.rating}</Text>
-
-                <Text style={s.distance}>{item.distance}</Text>
-              </View>
-
-              <Text style={s.price}>Dagens lunch från {item.price}</Text>
-            </View>
-          </Pressable>
-        )}
-      />
-
-      <Text style={s.sectionTitle}>Dagens lunch</Text>
-
-      <View style={s.lunchCard}>
-        <View style={s.lunchInfo}>
-          <Text style={s.lunchTitle}>Lunch idag</Text>
-
-          <Text style={s.lunchText}>Dagens lunch från 119 kr</Text>
-
-          <Text style={s.lunchText}>🕐 11:00 – 14:00</Text>
-
-          <Text style={s.lunchText}>📍 Borås</Text>
-        </View>
-
-        <Pressable
-          style={s.lunchButton}
-          onPress={() => router.push("/restaurant/1")}
+      {!loading && error === "" && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.restaurantList}
         >
-          <Text style={s.lunchButtonText}>Visa</Text>
-        </Pressable>
-      </View>
+          {filteredRestaurants.map((restaurant) => (
+            <RestaurantCard
+              key={restaurant.id}
+              restaurant={restaurant}
+              onPress={() => router.push(`/restaurant/${restaurant.id}`)}
+            />
+          ))}
+        </ScrollView>
+      )}
 
-      <Pressable
-        style={s.favoritesButton}
-        onPress={() => router.push("/favorites")}
-      >
-        <Text style={s.favoritesText}>♡ Mina favoriter</Text>
-      </Pressable>
+      <Text style={s.lunchTitle}>Dagens lunch</Text>
+
+      <Text style={s.lunchWeek}>Vecka {weekNumber}</Text>
+
+      {lunchLoading && <Text style={s.message}>Hämtar dagens lunch...</Text>}
+
+      {!lunchLoading &&
+        lunches.map((lunch, index) => (
+          <LunchCard key={`${lunch.restaurant}-${index}`} lunch={lunch} />
+        ))}
+
+      <FavoritesButton onPress={() => router.push("/(tabs)/favorites")} />
     </ScrollView>
   );
 }
 
-const screenWidth = Dimensions.get("window").width;
-
 const s = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-
-  content: {
     padding: 20,
-    paddingBottom: 30,
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 25,
-  },
-
-  logo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#222222",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: "#777777",
-    marginTop: 4,
-  },
-
-  profileButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 23,
-    backgroundColor: "#F2F2F2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  profileIcon: {
-    fontSize: 20,
-  },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 18,
-    height: 52,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-  },
-
-  searchIcon: {
-    fontSize: 22,
-    color: "#555555",
-    marginRight: 8,
-  },
-
-  search: {
-    flex: 1,
-    fontSize: 15,
-    color: "#222222",
-  },
-
-  filterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    paddingTop: 50,
     backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  filterIcon: {
-    fontSize: 22,
-    color: "#333333",
-  },
-
-  categories: {
-    marginBottom: 25,
-  },
-
-  categoryActive: {
-    backgroundColor: "#FFB82E",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  category: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  categoryActiveText: {
-    color: "#222222",
-    fontWeight: "600",
-  },
-
-  categoryText: {
-    color: "#555555",
+    flexGrow: 1,
   },
 
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
-  },
-
-  sectionTitle: {
-    fontSize: 21,
-    fontWeight: "bold",
-    color: "#222222",
-    marginBottom: 15,
-  },
-
-  seeAll: {
-    color: "#555555",
-    fontWeight: "600",
-  },
-
-  restaurantList: {
-    paddingBottom: 30,
-  },
-
-  card: {
-    width: screenWidth * 0.72,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    marginRight: 15,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-  },
-
-  restaurantImage: {
-    width: "100%",
-    height: 145,
-  },
-
-  favoriteButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  heart: {
-    fontSize: 22,
-    color: "#222222",
-  },
-
-  cardContent: {
-    padding: 14,
-  },
-
-  restaurantName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#222222",
-  },
-
-  ratingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  rating: {
-    fontSize: 14,
-    color: "#F0A500",
-    fontWeight: "600",
-  },
-
-  distance: {
-    fontSize: 14,
-    color: "#777777",
-  },
-
-  price: {
-    fontSize: 14,
-    color: "#555555",
-  },
-
-  lunchCard: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
-    padding: 18,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 20,
   },
 
-  lunchTitle: {
-    fontSize: 17,
+  sectionTitle: {
+    fontSize: 24,
     fontWeight: "bold",
     color: "#222222",
-    marginBottom: 5,
   },
 
-  lunchText: {
+  seAlla: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#555555",
+  },
+
+  restaurantList: {
+    marginBottom: 30,
+  },
+
+  lunchTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#222222",
+    marginBottom: 3,
+  },
+
+  lunchWeek: {
+    fontSize: 16,
+    color: "#777777",
+    marginBottom: 15,
+  },
+
+  message: {
+    textAlign: "center",
+    marginVertical: 20,
     color: "#777777",
   },
 
-  lunchButton: {
-    backgroundColor: "#FFB82E",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 15,
-  },
-
-  lunchButtonText: {
-    fontWeight: "600",
-    color: "#222222",
-  },
-
-  favoritesButton: {
-    backgroundColor: "#FFB82E",
-    padding: 16,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-
-  favoritesText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222222",
-  },
-  lunchInfo: {
-    flex: 1,
+  error: {
+    textAlign: "center",
+    marginVertical: 20,
+    color: "red",
   },
 });

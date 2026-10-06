@@ -12,43 +12,59 @@ import {
   View,
 } from "react-native";
 
+import type { Restaurant } from "../../components/RestaurantCard";
+import { getRestaurants } from "../../services/restaurantApi";
+import { getLunches } from "../../services/lunchApi";
+import type { Lunch } from "../../services/lunchApi";
+
 export default function RestaurantDetails() {
   const { id } = useLocalSearchParams();
+
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+
+  const [lunch, setLunch] = useState<Lunch | null>(null);
+
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+
+  const [isFavorite, setIsFavorite] = useState(false);
+
   const addFavorite = async () => {
     setIsFavorite(!isFavorite);
 
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
-  );
-  const [isFavorite, setIsFavorite] = useState(false);
-  const restaurantLocation = {
-    latitude: 57.721,
-    longitude: 12.94,
-  };
+  useEffect(() => {
+    const loadRestaurant = async () => {
+      try {
+        const restaurants = await getRestaurants();
 
-  const calculateDistance = () => {
-    if (!location) return null;
+        const foundRestaurant = restaurants.find(
+          (item) => item.id.toString() === id?.toString(),
+        );
 
-    const lat1 = (location.coords.latitude * Math.PI) / 180;
-    const lon1 = (location.coords.longitude * Math.PI) / 180;
+        setRestaurant(foundRestaurant || null);
 
-    const lat2 = (restaurantLocation.latitude * Math.PI) / 180;
-    const lon2 = (restaurantLocation.longitude * Math.PI) / 180;
+        if (foundRestaurant) {
+          const lunches = await getLunches();
 
-    const dLat = lat2 - lat1;
-    const dLon = lon2 - lon1;
+          const foundLunch = lunches.find(
+            (item) =>
+              item.restaurant.toLowerCase().trim() ===
+              foundRestaurant.name.toLowerCase().trim(),
+          );
 
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+          setLunch(foundLunch || null);
+        }
+      } catch (error) {
+        console.log("Restaurant error:", error);
+      }
+    };
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return 6371 * c;
-  };
+    loadRestaurant();
+  }, [id]);
 
   useEffect(() => {
     const getLocation = async () => {
@@ -67,12 +83,20 @@ export default function RestaurantDetails() {
     getLocation();
   }, []);
 
+  if (!restaurant) {
+    return (
+      <View style={s.loading}>
+        <Text>Hämtar restaurang...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={s.imageContainer}>
         <Image
           source={{
-            uri: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+            uri: restaurant.image,
           }}
           style={s.image}
         />
@@ -87,39 +111,53 @@ export default function RestaurantDetails() {
       </View>
 
       <View style={s.container}>
-        <Text style={s.title}>Restaurant {id}</Text>
-
-        <Text style={s.description}>
-          En trevlig restaurang i Borås som serverar god lunch med flera
-          alternativ att välja mellan.
-        </Text>
+        <Text style={s.title}>{restaurant.name}</Text>
 
         <View style={s.info}>
-          <Text style={s.label}>📍 Adress</Text>
-          <Text style={s.text}>Allégatan 1, Borås</Text>
-        </View>
+          <Text style={s.label}>🍽️ Kategori</Text>
 
-        <View style={s.info}>
-          <Text style={s.label}>🍽️ Lunch</Text>
-          <Text style={s.text}>Dagens lunch från 119 kr</Text>
-        </View>
-
-        <View style={s.info}>
-          <Text style={s.label}>🕐 Öppettider</Text>
-          <Text style={s.text}>11:00 – 14:00</Text>
+          <Text style={s.text}>{restaurant.category}</Text>
         </View>
 
         <View style={s.info}>
           <Text style={s.label}>⭐ Betyg</Text>
-          <Text style={s.text}>4.5 / 5</Text>
+
+          <Text style={s.text}>{restaurant.rating}</Text>
         </View>
+
+        <View style={s.info}>
+          <Text style={s.label}>🕐 Öppettider</Text>
+
+          <Text style={s.text}>{restaurant.openingHours}</Text>
+        </View>
+
+        <View style={s.info}>
+          <Text style={s.label}>📍 Adress</Text>
+
+          <Text style={s.text}>{restaurant.address}</Text>
+        </View>
+
+        {lunch && (
+          <View style={s.info}>
+            <Text style={s.label}>🍽️ Dagens lunch</Text>
+
+            <Text style={s.text}>{lunch.day}</Text>
+
+            {lunch.items.map((item, index) => (
+              <View key={`${item.name}-${index}`} style={s.lunchItem}>
+                <Text style={s.lunchName}>• {item.name}</Text>
+
+                <Text style={s.lunchPrice}>{item.price}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {location && (
           <View style={s.info}>
-            <Text style={s.label}>📍 Avstånd</Text>
-            <Text style={s.text}>
-              {calculateDistance()?.toFixed(1)} km från dig
-            </Text>
+            <Text style={s.label}>📍 Location</Text>
+
+            <Text style={s.text}>Din position har hämtats</Text>
           </View>
         )}
       </View>
@@ -128,12 +166,19 @@ export default function RestaurantDetails() {
 }
 
 const s = StyleSheet.create({
-  image: {
-    width: "100%",
-    height: 220,
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
+
   imageContainer: {
     position: "relative",
+  },
+
+  image: {
+    width: "100%",
+    height: 250,
   },
 
   favoriteButton: {
@@ -148,11 +193,6 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
 
-  favoriteText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-
   container: {
     padding: 20,
   },
@@ -160,12 +200,6 @@ const s = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 12,
-  },
-
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
     marginBottom: 20,
   },
 
@@ -181,5 +215,20 @@ const s = StyleSheet.create({
 
   text: {
     fontSize: 16,
+  },
+
+  lunchItem: {
+    marginTop: 10,
+  },
+
+  lunchName: {
+    fontSize: 16,
+    lineHeight: 23,
+  },
+
+  lunchPrice: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginTop: 2,
   },
 });
