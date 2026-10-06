@@ -1,9 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Dimensions,
-  FlatList,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import RestaurantCard from "../../components/RestaurantCard";
 
 type Restaurant = {
   id: number;
@@ -29,6 +27,8 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Alla");
   const [apiRestaurants, setApiRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const query = `
 [out:json];
@@ -42,41 +42,53 @@ out;
 
   useEffect(() => {
     const getRestaurants = async () => {
-      const response = await fetch(API_URL);
-      const data = await response.json();
+      try {
+        const response = await fetch(API_URL);
 
-      const restaurants: Restaurant[] = data.elements
-        .filter((restaurant: any) => restaurant.tags?.name)
-        .map((restaurant: any) => {
-          const cuisine = restaurant.tags?.cuisine?.toLowerCase() || "";
+        if (!response.ok) {
+          throw new Error("Kunde inte hämta restauranger");
+        }
 
-          let category = "Alla";
+        const data = await response.json();
 
-          if (cuisine.includes("pizza")) {
-            category = "Pizza";
-          } else if (cuisine.includes("burger")) {
-            category = "Burger";
-          } else if (
-            cuisine.includes("salad") ||
-            cuisine.includes("vegetarian")
-          ) {
-            category = "Sallad";
-          }
+        const restaurants: Restaurant[] = data.elements
+          .filter((restaurant: any) => restaurant.tags?.name)
+          .map((restaurant: any) => {
+            const cuisine = restaurant.tags?.cuisine?.toLowerCase() || "";
 
-          return {
-            id: restaurant.id,
-            name: restaurant.tags.name,
-            category,
-            image:
-              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-            rating: "—",
-            price: "—",
-            distance: "—",
-            openingHours: restaurant.tags?.opening_hours || "Ej angivet",
-          };
-        });
+            let category = "Alla";
 
-      setApiRestaurants(restaurants);
+            if (cuisine.includes("pizza")) {
+              category = "Pizza";
+            } else if (cuisine.includes("burger")) {
+              category = "Burger";
+            } else if (
+              cuisine.includes("salad") ||
+              cuisine.includes("vegetarian")
+            ) {
+              category = "Sallad";
+            }
+
+            return {
+              id: restaurant.id,
+              name: restaurant.tags.name,
+              category,
+              image:
+                "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+              rating: "—",
+              price: "—",
+              distance: "—",
+              openingHours: restaurant.tags?.opening_hours || "Ej angivet",
+            };
+          });
+
+        setApiRestaurants(restaurants);
+      } catch (error) {
+        console.log(error);
+        setError("Kunde inte hämta restauranger.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     getRestaurants();
@@ -199,41 +211,24 @@ out;
         </Pressable>
       </View>
 
-      <FlatList
-        data={filteredRestaurants}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={s.restaurantList}
-        renderItem={({ item }) => (
-          <Pressable
-            style={s.card}
-            onPress={() => router.push(`/restaurant/${item.id}`)}
-          >
-            <View>
-              <Image source={{ uri: item.image }} style={s.restaurantImage} />
+      {/* Loading */}
+      {loading && <Text style={s.statusText}>Hämtar restauranger...</Text>}
 
-              <Pressable style={s.favoriteButton}>
-                <Text style={s.heart}>♡</Text>
-              </Pressable>
-            </View>
+      {error !== "" && <Text style={s.errorText}>{error}</Text>}
 
-            <View style={s.cardContent}>
-              <Text style={s.restaurantName}>{item.name}</Text>
+      {!loading && error === "" && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {filteredRestaurants.map((restaurant) => (
+            <RestaurantCard
+              key={restaurant.id}
+              restaurant={restaurant}
+              onPress={() => router.push(`/restaurant/${restaurant.id}`)}
+            />
+          ))}
+        </ScrollView>
+      )}
 
-              <View style={s.ratingRow}>
-                <Text style={s.rating}>★ {item.rating}</Text>
-
-                <Text style={s.distance}>{item.distance}</Text>
-              </View>
-
-              <Text style={s.price}>Dagens lunch från {item.price}</Text>
-              <Text style={s.price}>🕐 {item.openingHours}</Text>
-            </View>
-          </Pressable>
-        )}
-      />
-
+      {/* Lunch */}
       <Text style={s.sectionTitle}>Dagens lunch</Text>
 
       <View style={s.lunchCard}>
@@ -265,8 +260,6 @@ out;
     </ScrollView>
   );
 }
-
-const screenWidth = Dimensions.get("window").width;
 
 const s = StyleSheet.create({
   container: {
@@ -395,73 +388,14 @@ const s = StyleSheet.create({
     fontWeight: "600",
   },
 
-  restaurantList: {
-    paddingBottom: 30,
-  },
-
-  card: {
-    width: screenWidth * 0.72,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    marginRight: 15,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-  },
-
-  restaurantImage: {
-    width: "100%",
-    height: 145,
-  },
-
-  favoriteButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  heart: {
-    fontSize: 22,
-    color: "#222222",
-  },
-
-  cardContent: {
-    padding: 14,
-  },
-
-  restaurantName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#222222",
-  },
-
-  ratingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  rating: {
-    fontSize: 14,
-    color: "#F0A500",
-    fontWeight: "600",
-  },
-
-  distance: {
-    fontSize: 14,
+  statusText: {
     color: "#777777",
+    marginBottom: 20,
   },
 
-  price: {
-    fontSize: 14,
-    color: "#555555",
+  errorText: {
+    color: "#D32F2F",
+    marginBottom: 20,
   },
 
   lunchCard: {
