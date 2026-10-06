@@ -1,68 +1,59 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+
+import type { Lunch } from "../services/lunchApi";
 
 type LunchCardProps = {
-  onPress: () => void;
+  lunch: Lunch;
 };
 
-export default function LunchCard({ onPress }: LunchCardProps) {
+export default function LunchCard({ lunch }: LunchCardProps) {
   return (
     <View style={s.card}>
-      <View style={s.info}>
-        <Text style={s.title}>Lunch idag</Text>
+      <Text style={s.restaurant}>{lunch.restaurant}</Text>
 
-        <Text style={s.price}>Dagens lunch från 119 kr</Text>
+      <Text style={s.day}>{lunch.day}</Text>
 
-        <Text style={s.details}>🕐 11:00 – 14:00</Text>
+      <Text style={s.dish}>{lunch.dish}</Text>
 
-        <Text style={s.details}>📍 Borås</Text>
-      </View>
-
-      <Pressable style={s.button} onPress={onPress}>
-        <Text style={s.buttonText}>Visa</Text>
-      </Pressable>
+      <Text style={s.price}>{lunch.price}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 25,
-    padding: 22,
-    marginTop: 15,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
   },
-  info: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 21,
-    fontWeight: "bold",
-    color: "#222222",
-    marginBottom: 8,
-  },
-  price: {
-    fontSize: 17,
-    color: "#777777",
-    marginBottom: 5,
-  },
-  details: {
-    fontSize: 17,
-    color: "#777777",
-    marginBottom: 2,
-  },
-  button: {
-    backgroundColor: "#FFB82E",
-    paddingHorizontal: 25,
-    paddingVertical: 17,
-    borderRadius: 22,
-    marginLeft: 10,
-  },
-  buttonText: {
+
+  restaurant: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#222222",
+    marginBottom: 5,
+  },
+
+  day: {
+    fontSize: 15,
+    color: "#FFB82E",
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+
+  dish: {
+    fontSize: 16,
+    color: "#444444",
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+
+  price: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#666666",
   },
 });
