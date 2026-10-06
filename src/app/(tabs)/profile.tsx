@@ -1,6 +1,16 @@
 import * as ImagePicker from "expo-image-picker";
+import * as Notifications from "expo-notifications";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function Profile() {
   const [image, setImage] = useState<string | null>(null);
@@ -18,6 +28,25 @@ export default function Profile() {
     }
   };
 
+  const sendNotification = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+
+    if (status !== "granted") {
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "LunchBorås 🍴",
+        body: "Dags att kolla dagens lunch!",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 2,
+      },
+    });
+  };
+
   return (
     <View style={s.container}>
       <Text style={s.title}>Min sida</Text>
@@ -32,6 +61,10 @@ export default function Profile() {
 
       <Pressable style={s.button} onPress={pickImage}>
         <Text style={s.buttonText}>Välj profilbild</Text>
+      </Pressable>
+
+      <Pressable style={s.notificationButton} onPress={sendNotification}>
+        <Text style={s.buttonText}>Testa notis 🔔</Text>
       </Pressable>
     </View>
   );
@@ -76,5 +109,12 @@ const s = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  notificationButton: {
+    backgroundColor: "#FFB82E",
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    marginTop: 15,
   },
 });
