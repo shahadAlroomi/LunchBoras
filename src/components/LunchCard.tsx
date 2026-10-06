@@ -13,9 +13,19 @@ export default function LunchCard({ lunch }: LunchCardProps) {
 
       <Text style={s.day}>{lunch.day}</Text>
 
-      <Text style={s.dish}>{lunch.dish}</Text>
+      <View style={s.items}>
+        {lunch.items.map((item, index) => (
+          <View key={`${item.name}-${index}`} style={s.item}>
+            <Text style={s.bullet}>•</Text>
 
-      <Text style={s.price}>{lunch.price}</Text>
+            <View style={s.itemContent}>
+              <Text style={s.dish}>{item.name}</Text>
+
+              <Text style={s.price}>{item.price}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -31,29 +41,49 @@ const s = StyleSheet.create({
   },
 
   restaurant: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#222222",
     marginBottom: 5,
   },
 
   day: {
-    fontSize: 15,
-    color: "#FFB82E",
+    fontSize: 16,
     fontWeight: "600",
-    marginBottom: 10,
+    color: "#FFB82E",
+    marginBottom: 15,
+  },
+
+  items: {
+    gap: 12,
+  },
+
+  item: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  bullet: {
+    fontSize: 20,
+    color: "#FFB82E",
+    marginRight: 8,
+    lineHeight: 24,
+  },
+
+  itemContent: {
+    flex: 1,
   },
 
   dish: {
     fontSize: 16,
     color: "#444444",
-    lineHeight: 24,
-    marginBottom: 12,
+    lineHeight: 23,
   },
 
   price: {
     fontSize: 15,
     fontWeight: "600",
     color: "#666666",
+    marginTop: 3,
   },
 });
