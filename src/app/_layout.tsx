@@ -5,11 +5,19 @@ export default function RootLayout() {
   return (
     <FavoritesProvider>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
 
         <Stack.Screen
           name="restaurant/[id]"
-          options={{ title: "Restaurant" }}
+          options={{
+            title: "Restaurant",
+            headerBackTitle: "Tillbaka",
+          }}
         />
       </Stack>
     </FavoritesProvider>

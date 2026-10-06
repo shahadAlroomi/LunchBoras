@@ -13,9 +13,9 @@ import {
 } from "react-native";
 
 import type { Restaurant } from "../../components/RestaurantCard";
-import { getRestaurants } from "../../services/restaurantApi";
-import { getLunches } from "../../services/lunchApi";
 import type { Lunch } from "../../services/lunchApi";
+import { getLunches } from "../../services/lunchApi";
+import { getRestaurants } from "../../services/restaurantApi";
 
 export default function RestaurantDetails() {
   const { id } = useLocalSearchParams();
@@ -27,6 +27,7 @@ export default function RestaurantDetails() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
+  const [distance, setDistance] = useState<number | null>(null);
 
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -34,6 +35,29 @@ export default function RestaurantDetails() {
     setIsFavorite(!isFavorite);
 
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const calculateDistance = (
+    latitude1: number,
+    longitude1: number,
+    latitude2: number,
+    longitude2: number,
+  ) => {
+    const earthRadius = 6371;
+
+    const latitudeDifference = ((latitude2 - latitude1) * Math.PI) / 180;
+
+    const longitudeDifference = ((longitude2 - longitude1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(latitudeDifference / 2) ** 2 +
+      Math.cos((latitude1 * Math.PI) / 180) *
+        Math.cos((latitude2 * Math.PI) / 180) *
+        Math.sin(longitudeDifference / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadius * c;
   };
 
   useEffect(() => {
@@ -68,20 +92,45 @@ export default function RestaurantDetails() {
 
   useEffect(() => {
     const getLocation = async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== "granted") {
-        console.log("Location permission denied");
-        return;
+        if (status !== "granted") {
+          console.log("Location permission denied");
+          return;
+        }
+
+        const currentLocation = await Location.getCurrentPositionAsync({});
+
+        setLocation(currentLocation);
+
+        if (!restaurant) {
+          return;
+        }
+
+        const geocodedLocation = await Location.geocodeAsync(
+          restaurant.address,
+        );
+
+        if (geocodedLocation.length > 0) {
+          const restaurantLocation = geocodedLocation[0];
+
+          const calculatedDistance = calculateDistance(
+            currentLocation.coords.latitude,
+            currentLocation.coords.longitude,
+            restaurantLocation.latitude,
+            restaurantLocation.longitude,
+          );
+
+          setDistance(calculatedDistance);
+        }
+      } catch (error) {
+        console.log("Location error:", error);
       }
-
-      const currentLocation = await Location.getCurrentPositionAsync({});
-
-      setLocation(currentLocation);
     };
 
     getLocation();
-  }, []);
+  }, [restaurant]);
 
   if (!restaurant) {
     return (
@@ -153,11 +202,11 @@ export default function RestaurantDetails() {
           </View>
         )}
 
-        {location && (
+        {distance !== null && (
           <View style={s.info}>
-            <Text style={s.label}>📍 Location</Text>
+            <Text style={s.label}>📍 Avstånd</Text>
 
-            <Text style={s.text}>Din position har hämtats</Text>
+            <Text style={s.text}>{distance.toFixed(1)} km från dig</Text>
           </View>
         )}
       </View>

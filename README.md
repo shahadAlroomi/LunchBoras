@@ -16,6 +16,7 @@ Appen är byggd med React Native, Expo, TypeScript och Expo Router.
 - Visa restaurangens detaljer
 - Visa dagens lunch
 - Visa öppettider och adress
+- Visa avstånd till restaurangen
 - Lägga till och ta bort restauranger från favoriter
 - Visa sparade favoriter
 - Välja profilbild
@@ -55,7 +56,7 @@ React Native-komponenter
 View
 Används som en container för att strukturera innehållet på skärmar och komponenter.
 Text
-Används för att visa text, exempelvis restaurangnamn, adresser och information.
+Används för att visa text, exempelvis restaurangnamn, adresser och annan information.
 Image
 Används för att visa restaurangbilder och profilbilder.
 Pressable
@@ -66,7 +67,7 @@ TextInput
 Används i sökfunktionen för att användaren ska kunna skriva in en restaurang.
 Expo SDK-moduler
 expo-location
-Används för att begära användarens position och hämta aktuell position.
+Används för att begära användarens position och beräkna avståndet mellan användaren och restaurangen.
 expo-image-picker
 Används på profilsidan för att låta användaren välja en profilbild från enheten.
 expo-haptics
@@ -90,21 +91,19 @@ const { id } = useLocalSearchParams();
 Det gör att samma detaljsida kan användas för olika restauranger.
 Web API
 Appen hämtar data från ett externt Web API med JavaScript fetch och async/await.
-Restaurangdata hämtas från:
+Restaurangdata och lunchdata hämtas från:
 https://www.matochmat.se/restauranger/boras/lunch/
 
-Appen hämtar restauranginformation och lunchdata och visar informationen i React Native.
+Appen hämtar information från API-källan och bearbetar sedan datan innan den visas i React Native.
 Exempel på tekniker som används:
 const response = await fetch(API_URL);
 const data = await response.text();
 
-och:
-const response = await fetch(...);
-
-Data bearbetas sedan innan den visas i appen.
+Data bearbetas sedan för att visa restauranger, bilder, adresser, öppettider och lunchinformation i appen.
 Git och GitHub
 Git och GitHub har använts under hela utvecklingen.
 Arbetet har delats upp i mindre delar och olika branches har använts för olika funktioner.
+
 Exempel på branches:
 - create-expo-project-with-typescript
 - create-app-navigation
@@ -113,12 +112,11 @@ Exempel på branches:
 - create-favorites-screen
 - create-bottom-tabs
 - expo-location
+
 Projektets GitHub-repository:
 https://github.com/shahadAlroomi/LunchBoraas
 
-
-AI-användning
-
+## AI-användning
 Under utvecklingen av LunchBorås har jag använt ChatGPT som ett stöd i arbetet.
 Jag har använt AI bland annat för:
 - Förklaringar av React Native, Expo och TypeScript.
@@ -131,25 +129,29 @@ Jag har verifierat AI-genererad kod genom att läsa och förstå koden, köra pr
 När jag fått felmeddelanden har jag kontrollerat vad felet berodde på och testat ändringarna i projektet.
 AI har därför använts som ett stöd under utvecklingen. Jag har själv gått igenom, implementerat, testat och verifierat funktionerna i projektet.
 
+
+## Reflektion
+- Under utvecklingen av LunchBorås har jag fått arbeta med React Native, Expo, TypeScript och Expo Router.
+- En del av arbetet har varit att förstå hur navigation med dynamiska routes fungerar och hur data kan skickas mellan olika delar av appen.
+- Jag har också fått arbeta med API-anrop, fetch, async/await, state och hooks.
+- Det som varit mest utmanande har varit att felsöka TypeScript- och Expo-relaterade problem och att få olika delar av appen att fungera tillsammans.
+- Jag har lärt mig att det är viktigt att bygga appen stegvis, testa varje funktion och använda Git för att kunna följa utvecklingen och gå tillbaka om något blir fel.
+- Om jag skulle göra projektet igen skulle jag planera datastrukturen och API-hanteringen ännu tidigare och testa varje större funktion direkt efter att den implementerats.
+
+
 Uppfyllda krav
 Godkänt (G)
 - [x] Minst 4 React Native-komponenter används
 - [x] Minst 4 Expo SDK-moduler används
 - [x] Expo Router används för navigation
 - [x] Minst en skärm använder en dynamisk route och tar emot en parameter
-- [x] Git och GitHub används
+- [x] Git och GitHub används med commits under arbetets gång
 - [x] Projektet innehåller en README.md
-- [X] Uppgiften är inlämnad i tid
+- [x] Uppgiften är inlämnad i tid
 - [x] Alla krav för G är uppfyllda
 - [ ] Ytterligare extern modul från reactnative.directory används
 - [x] Appen hämtar data från ett Web API
 - [x] Användningen av AI-verktyg är dokumenterad i README
 
-Reflektion
-Under utvecklingen av LunchBorås har jag fått arbeta med React Native, Expo, TypeScript och Expo Router.
-En del av arbetet har varit att förstå hur navigation med dynamiska routes fungerar och hur data kan skickas mellan olika delar av appen.
-Jag har också fått arbeta med API-anrop, fetch, async/await, state och hooks.
-Det som varit mest utmanande har varit att felsöka TypeScript- och Expo-relaterade problem och att få olika delar av appen att fungera tillsammans.
-Jag har lärt mig att det är viktigt att bygga appen stegvis, testa varje funktion och använda Git för att kunna följa utvecklingen och gå tillbaka om något blir fel.
-Om jag skulle göra projektet igen skulle jag planera datastrukturen och API-hanteringen ännu tidigare och testa varje större funktion direkt efter att den implementerats.
+###
 ```
