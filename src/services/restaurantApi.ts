@@ -121,11 +121,8 @@ async function getMatRestaurants(): Promise<MatRestaurant[]> {
         const html = await response.text();
 
         const name = getRestaurantName(html);
-
         const image = getImageUrl(html);
-
         const address = getAddress(html);
-
         const openingHours = getOpeningHours(html);
 
         if (!image) {
@@ -141,7 +138,6 @@ async function getMatRestaurants(): Promise<MatRestaurant[]> {
         };
       } catch (error) {
         console.log("Kunde inte hämta restaurang:", error);
-
         return null;
       }
     }),

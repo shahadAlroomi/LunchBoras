@@ -6,12 +6,12 @@ import CategoryFilter from "../../components/CategoryFilter";
 import FavoritesButton from "../../components/FavoritesButton";
 import Header from "../../components/Header";
 import LunchCard from "../../components/LunchCard";
+import type { Restaurant } from "../../components/RestaurantCard";
 import RestaurantCard from "../../components/RestaurantCard";
 import SearchBar from "../../components/SearchBar";
-import type { Restaurant } from "../../components/RestaurantCard";
-import { getRestaurants } from "../../services/restaurantApi";
-import { getLunches } from "../../services/lunchApi";
 import type { Lunch } from "../../services/lunchApi";
+import { getLunches } from "../../services/lunchApi";
+import { getRestaurants } from "../../services/restaurantApi";
 
 function getWeekNumber(date: Date): number {
   const tempDate = new Date(date.getTime());
