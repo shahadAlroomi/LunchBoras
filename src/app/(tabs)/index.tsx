@@ -1,88 +1,32 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+
+import CategoryFilter from "../../components/CategoryFilter";
+import FavoritesButton from "../../components/FavoritesButton";
+import Header from "../../components/Header";
+import LunchCard from "../../components/LunchCard";
 import RestaurantCard from "../../components/RestaurantCard";
+import SearchBar from "../../components/SearchBar";
+import { getRestaurants } from "../../services/restaurantApi";
+import type { Restaurant } from "../../components/RestaurantCard";
 
-type Restaurant = {
-  id: number;
-  name: string;
-  category: string;
-  image: string;
-  rating: string;
-  price: string;
-  distance: string;
-  openingHours: string;
-};
-
-export default function Index() {
+export default function HomeScreen() {
   const router = useRouter();
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Alla");
-  const [apiRestaurants, setApiRestaurants] = useState<Restaurant[]>([]);
+
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const query = `
-[out:json];
-node["amenity"="restaurant"](57.65,12.85,57.75,13.05);
-out;
-`;
-
-  const API_URL = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
-    query,
-  )}`;
-
   useEffect(() => {
-    const getRestaurants = async () => {
+    const loadRestaurants = async () => {
       try {
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-          throw new Error("Kunde inte hämta restauranger");
-        }
-
-        const data = await response.json();
-
-        const restaurants: Restaurant[] = data.elements
-          .filter((restaurant: any) => restaurant.tags?.name)
-          .map((restaurant: any) => {
-            const cuisine = restaurant.tags?.cuisine?.toLowerCase() || "";
-
-            let category = "Alla";
-
-            if (cuisine.includes("pizza")) {
-              category = "Pizza";
-            } else if (cuisine.includes("burger")) {
-              category = "Burger";
-            } else if (
-              cuisine.includes("salad") ||
-              cuisine.includes("vegetarian")
-            ) {
-              category = "Sallad";
-            }
-
-            return {
-              id: restaurant.id,
-              name: restaurant.tags.name,
-              category,
-              image:
-                "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-              rating: "—",
-              price: "—",
-              distance: "—",
-              openingHours: restaurant.tags?.opening_hours || "Ej angivet",
-            };
-          });
-
-        setApiRestaurants(restaurants);
+        const data = await getRestaurants();
+        setRestaurants(data);
       } catch (error) {
         console.log(error);
         setError("Kunde inte hämta restauranger.");
@@ -91,10 +35,10 @@ out;
       }
     };
 
-    getRestaurants();
+    loadRestaurants();
   }, []);
 
-  const filteredRestaurants = apiRestaurants.filter(
+  const filteredRestaurants = restaurants.filter(
     (restaurant) =>
       restaurant.name.toLowerCase().includes(search.toLowerCase()) &&
       (selectedCategory === "Alla" || restaurant.category === selectedCategory),
@@ -102,122 +46,36 @@ out;
 
   return (
     <ScrollView
-      style={s.container}
-      contentContainerStyle={s.content}
+      contentContainerStyle={s.container}
       showsVerticalScrollIndicator={false}
     >
-      <View style={s.header}>
-        <View>
-          <Text style={s.logo}>LunchBorås</Text>
-          <Text style={s.subtitle}>Hitta dagens lunch</Text>
-        </View>
+      <Header onProfilePress={() => router.push("/(tabs)/profile")} />
 
-        <Pressable
-          style={s.profileButton}
-          onPress={() => router.push("/profile")}
-        >
-          <Text style={s.profileIcon}>👤</Text>
-        </Pressable>
-      </View>
+      <SearchBar search={search} setSearch={setSearch} />
 
-      {/* Search */}
-      <View style={s.searchContainer}>
-        <Text style={s.searchIcon}>⌕</Text>
-
-        <TextInput
-          style={s.search}
-          placeholder="Sök restaurang..."
-          placeholderTextColor="#888888"
-          value={search}
-          onChangeText={setSearch}
-        />
-
-        <Pressable style={s.filterButton}>
-          <Text style={s.filterIcon}>☷</Text>
-        </Pressable>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={s.categories}
-      >
-        <Pressable
-          style={selectedCategory === "Alla" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Alla")}
-        >
-          <Text
-            style={
-              selectedCategory === "Alla"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍽️ Alla
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Pizza" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Pizza")}
-        >
-          <Text
-            style={
-              selectedCategory === "Pizza"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍕 Pizza
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Burger" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Burger")}
-        >
-          <Text
-            style={
-              selectedCategory === "Burger"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🍔 Burger
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={selectedCategory === "Sallad" ? s.categoryActive : s.category}
-          onPress={() => setSelectedCategory("Sallad")}
-        >
-          <Text
-            style={
-              selectedCategory === "Sallad"
-                ? s.categoryActiveText
-                : s.categoryText
-            }
-          >
-            🥗 Sallad
-          </Text>
-        </Pressable>
-      </ScrollView>
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+      />
 
       <View style={s.sectionHeader}>
         <Text style={s.sectionTitle}>Populära restauranger</Text>
 
-        <Pressable>
-          <Text style={s.seeAll}>Se alla</Text>
+        <Pressable onPress={() => setSelectedCategory("Alla")}>
+          <Text style={s.seAlla}>Se alla</Text>
         </Pressable>
       </View>
 
-      {/* Loading */}
-      {loading && <Text style={s.statusText}>Hämtar restauranger...</Text>}
+      {loading && <Text style={s.message}>Hämtar restauranger...</Text>}
 
-      {error !== "" && <Text style={s.errorText}>{error}</Text>}
+      {error !== "" && <Text style={s.error}>{error}</Text>}
 
       {!loading && error === "" && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.restaurantList}
+        >
           {filteredRestaurants.map((restaurant) => (
             <RestaurantCard
               key={restaurant.id}
@@ -228,223 +86,55 @@ out;
         </ScrollView>
       )}
 
-      {/* Lunch */}
-      <Text style={s.sectionTitle}>Dagens lunch</Text>
+      <Text style={s.lunchTitle}>Dagens lunch</Text>
 
-      <View style={s.lunchCard}>
-        <View style={s.lunchInfo}>
-          <Text style={s.lunchTitle}>Lunch idag</Text>
+      <LunchCard onPress={() => router.push("/restaurant/1")} />
 
-          <Text style={s.lunchText}>Dagens lunch från 119 kr</Text>
-
-          <Text style={s.lunchText}>🕐 11:00 – 14:00</Text>
-
-          <Text style={s.lunchText}>📍 Borås</Text>
-        </View>
-
-        <Pressable
-          style={s.lunchButton}
-          onPress={() => router.push("/restaurant/1")}
-        >
-          <Text style={s.lunchButtonText}>Visa</Text>
-        </Pressable>
-      </View>
-
-      {/* Favorites */}
-      <Pressable
-        style={s.favoritesButton}
-        onPress={() => router.push("/favorites")}
-      >
-        <Text style={s.favoritesText}>♡ Mina favoriter</Text>
-      </Pressable>
+      <FavoritesButton onPress={() => router.push("/(tabs)/favorites")} />
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-
-  content: {
     padding: 20,
-    paddingBottom: 30,
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 25,
-  },
-
-  logo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#222222",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: "#777777",
-    marginTop: 4,
-  },
-
-  profileButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 23,
-    backgroundColor: "#F2F2F2",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  profileIcon: {
-    fontSize: 20,
-  },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 18,
-    height: 52,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-  },
-
-  searchIcon: {
-    fontSize: 22,
-    color: "#555555",
-    marginRight: 8,
-  },
-
-  search: {
-    flex: 1,
-    fontSize: 15,
-    color: "#222222",
-  },
-
-  filterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    paddingTop: 50,
     backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
+    flexGrow: 1,
   },
-
-  filterIcon: {
-    fontSize: 22,
-    color: "#333333",
-  },
-
-  categories: {
-    marginBottom: 25,
-  },
-
-  categoryActive: {
-    backgroundColor: "#FFB82E",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  category: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-
-  categoryActiveText: {
-    color: "#222222",
-    fontWeight: "600",
-  },
-
-  categoryText: {
-    color: "#555555",
-  },
-
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
-
   sectionTitle: {
-    fontSize: 21,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#222222",
-    marginBottom: 15,
   },
-
-  seeAll: {
-    color: "#555555",
-    fontWeight: "600",
-  },
-
-  statusText: {
-    color: "#777777",
-    marginBottom: 20,
-  },
-
-  errorText: {
-    color: "#D32F2F",
-    marginBottom: 20,
-  },
-
-  lunchCard: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
-    padding: 18,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-
-  lunchInfo: {
-    flex: 1,
-  },
-
-  lunchTitle: {
+  seAlla: {
     fontSize: 17,
+    fontWeight: "600",
+    color: "#555555",
+  },
+  restaurantList: {
+    marginBottom: 30,
+  },
+  lunchTitle: {
+    fontSize: 24,
     fontWeight: "bold",
     color: "#222222",
-    marginBottom: 5,
+    marginBottom: 10,
   },
-
-  lunchText: {
+  message: {
+    textAlign: "center",
+    marginVertical: 20,
     color: "#777777",
   },
-
-  lunchButton: {
-    backgroundColor: "#FFB82E",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 15,
-  },
-
-  lunchButtonText: {
-    fontWeight: "600",
-    color: "#222222",
-  },
-
-  favoritesButton: {
-    backgroundColor: "#FFB82E",
-    padding: 16,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-
-  favoritesText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222222",
+  error: {
+    textAlign: "center",
+    marginVertical: 20,
+    color: "red",
   },
 });
