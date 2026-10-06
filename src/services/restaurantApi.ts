@@ -4,6 +4,8 @@ type MatRestaurant = {
   name: string;
   image: string;
   url: string;
+  address: string;
+  openingHours: string;
 };
 
 const API_URL = "https://www.matochmat.se/restauranger/boras/lunch/";
@@ -19,11 +21,22 @@ function cleanText(text: string): string {
     .trim();
 }
 
-function getRestaurantName(html: string): string {
-  const match = html.match(/Veckans lunchmeny\s+(.+?)(?=Lunch\s|Vecka\s)/);
+function stripHtml(html: string): string {
+  return cleanText(
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " "),
+  );
+}
 
-  if (match) {
-    return cleanText(match[1]);
+function getRestaurantName(html: string): string {
+  const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+
+  if (titleMatch) {
+    const title = cleanText(titleMatch[1]);
+
+    return title.replace(/\s+lunch\s+Borås\s*\|\s*Mat och Mat.*$/i, "").trim();
   }
 
   return "Restaurang";
@@ -51,6 +64,34 @@ function getImageUrl(html: string): string {
   }
 
   return "";
+}
+
+function getAddress(html: string): string {
+  const text = stripHtml(html);
+
+  const match = text.match(
+    /Hitta hit\s+(.+?)(?=\s+(?:Måndag|Tisdag|Onsdag|Torsdag|Fredag|Lördag|Söndag)\s+\d{1,2}\/\d{1,2})/i,
+  );
+
+  if (match) {
+    return cleanText(match[1]);
+  }
+
+  return "Adress saknas";
+}
+
+function getOpeningHours(html: string): string {
+  const text = stripHtml(html);
+
+  const match = text.match(
+    /Lunch\s+(?:Måndag|Tisdag|Onsdag|Torsdag|Fredag|Lördag|Söndag)\s*:\s*(\d{1,2}:\d{2}\s*[–-]\s*\d{1,2}:\d{2})/i,
+  );
+
+  if (match) {
+    return match[1];
+  }
+
+  return "Ej angivet";
 }
 
 async function getMatRestaurants(): Promise<MatRestaurant[]> {
@@ -83,6 +124,10 @@ async function getMatRestaurants(): Promise<MatRestaurant[]> {
 
         const image = getImageUrl(html);
 
+        const address = getAddress(html);
+
+        const openingHours = getOpeningHours(html);
+
         if (!image) {
           return null;
         }
@@ -91,6 +136,8 @@ async function getMatRestaurants(): Promise<MatRestaurant[]> {
           name,
           image,
           url: link,
+          address,
+          openingHours,
         };
       } catch (error) {
         console.log("Kunde inte hämta restaurang:", error);
@@ -136,6 +183,7 @@ export async function getRestaurants(): Promise<Restaurant[]> {
     rating: "—",
     price: "—",
     distance: "—",
-    openingHours: "Ej angivet",
+    openingHours: restaurant.openingHours,
+    address: restaurant.address,
   }));
 }

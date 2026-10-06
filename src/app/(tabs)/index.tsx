@@ -8,8 +8,30 @@ import Header from "../../components/Header";
 import LunchCard from "../../components/LunchCard";
 import RestaurantCard from "../../components/RestaurantCard";
 import SearchBar from "../../components/SearchBar";
-import { getRestaurants } from "../../services/restaurantApi";
 import type { Restaurant } from "../../components/RestaurantCard";
+import { getRestaurants } from "../../services/restaurantApi";
+import { getLunches } from "../../services/lunchApi";
+import type { Lunch } from "../../services/lunchApi";
+
+function getWeekNumber(date: Date): number {
+  const tempDate = new Date(date.getTime());
+
+  tempDate.setHours(0, 0, 0, 0);
+
+  tempDate.setDate(tempDate.getDate() + 3 - ((tempDate.getDay() + 6) % 7));
+
+  const week1 = new Date(tempDate.getFullYear(), 0, 4);
+
+  return (
+    1 +
+    Math.round(
+      ((tempDate.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,6 +43,11 @@ export default function HomeScreen() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [lunches, setLunches] = useState<Lunch[]>([]);
+  const [lunchLoading, setLunchLoading] = useState(true);
+
+  const weekNumber = getWeekNumber(new Date());
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -36,6 +63,21 @@ export default function HomeScreen() {
     };
 
     loadRestaurants();
+  }, []);
+
+  useEffect(() => {
+    const loadLunches = async () => {
+      try {
+        const data = await getLunches();
+        setLunches(data);
+      } catch (error) {
+        console.log("Lunch error:", error);
+      } finally {
+        setLunchLoading(false);
+      }
+    };
+
+    loadLunches();
   }, []);
 
   const filteredRestaurants = restaurants.filter(
@@ -88,7 +130,14 @@ export default function HomeScreen() {
 
       <Text style={s.lunchTitle}>Dagens lunch</Text>
 
-      <LunchCard onPress={() => router.push("/restaurant/1")} />
+      <Text style={s.lunchWeek}>Vecka {weekNumber}</Text>
+
+      {lunchLoading && <Text style={s.message}>Hämtar dagens lunch...</Text>}
+
+      {!lunchLoading &&
+        lunches.map((lunch, index) => (
+          <LunchCard key={`${lunch.restaurant}-${index}`} lunch={lunch} />
+        ))}
 
       <FavoritesButton onPress={() => router.push("/(tabs)/favorites")} />
     </ScrollView>
@@ -102,36 +151,49 @@ const s = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     flexGrow: 1,
   },
+
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
   },
+
   sectionTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#222222",
   },
+
   seAlla: {
     fontSize: 17,
     fontWeight: "600",
     color: "#555555",
   },
+
   restaurantList: {
     marginBottom: 30,
   },
+
   lunchTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#222222",
-    marginBottom: 10,
+    marginBottom: 3,
   },
+
+  lunchWeek: {
+    fontSize: 16,
+    color: "#777777",
+    marginBottom: 15,
+  },
+
   message: {
     textAlign: "center",
     marginVertical: 20,
     color: "#777777",
   },
+
   error: {
     textAlign: "center",
     marginVertical: 20,

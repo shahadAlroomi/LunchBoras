@@ -16,8 +16,7 @@ export type Restaurant = {
   price: string;
   distance: string;
   openingHours: string;
-  latitude: number;
-  longitude: number;
+  address: string;
 };
 
 type RestaurantCardProps = {
